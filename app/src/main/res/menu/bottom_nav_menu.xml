@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android">
+    <item
+        android:id="@+id/newTripFragment"
+        android:title="Новая"
+        android:icon="@android:drawable/ic_input_add" />
+    <item
+        android:id="@+id/tripListFragment"
+        android:title="Поездки"
+        android:icon="@android:drawable/ic_menu_myplaces" />
+    <item
+        android:id="@+id/statisticsFragment"
+        android:title="Статистика"
+        android:icon="@android:drawable/ic_menu_sort_by_size" />
+    <item
+        android:id="@+id/settingsFragment"
+        android:title="Настройки"
+        android:icon="@android:drawable/ic_menu_preferences" />
+</menu>

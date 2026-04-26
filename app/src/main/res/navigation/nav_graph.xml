@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="utf-8"?>
+<navigation xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    app:startDestination="@id/newTripFragment">
+    
+    <fragment
+        android:id="@+id/newTripFragment"
+        android:name="com.triplogger.ui.fragments.NewTripFragment"
+        android:label="Новая поездка" />
+    
+    <fragment
+        android:id="@+id/tripListFragment"
+        android:name="com.triplogger.ui.fragments.TripListFragment"
+        android:label="Список поездок" />
+    
+    <fragment
+        android:id="@+id/statisticsFragment"
+        android:name="com.triplogger.ui.fragments.StatisticsFragment"
+        android:label="Статистика" />
+    
+    <fragment
+        android:id="@+id/settingsFragment"
+        android:name="com.triplogger.ui.fragments.SettingsFragment"
+        android:label="Настройки" />
+</navigation>
