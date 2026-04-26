@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <style name="Theme.TripLogger" parent="Theme.Material3.Dark.NoActionBar">
+        <item name="colorPrimary">#90CAF9</item>
+        <item name="colorPrimaryVariant">#42A5F5</item>
+        <item name="colorOnPrimary">#1A1A1A</item>
+        <item name="colorSecondary">#FFB74D</item>
+        <item name="colorOnSecondary">#1A1A1A</item>
+    </style>
+</resources>

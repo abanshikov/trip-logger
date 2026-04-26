@@ -1,73 +1,64 @@
 package com.triplogger.utils
 
 import android.content.Context
+import android.content.Intent
 import android.net.Uri
 import android.os.Environment
+import android.widget.Toast
 import androidx.core.content.FileProvider
 import com.triplogger.data.TripEntity
-import org.apache.poi.ss.usermodel.*
-import org.apache.poi.xssf.usermodel.XSSFWorkbook
 import java.io.File
 import java.io.FileOutputStream
+import java.text.SimpleDateFormat
+import java.util.*
 
 class ExcelExporter(private val context: Context) {
-    fun exportTrips(trips: List<TripEntity>): Uri? {
-        val workbook = XSSFWorkbook()
-        val sheet = workbook.createSheet("Поездки")
-        
-        val headerStyle = workbook.createCellStyle().apply {
-            fillForegroundColor = IndexedColors.GREY_25_PERCENT.index
-            fillPattern = FillPatternType.SOLID_FOREGROUND
-            setFont(workbook.createFont().apply { bold = true })
-            borderBottom = BorderStyle.THIN
-            borderTop = BorderStyle.THIN
-            borderLeft = BorderStyle.THIN
-            borderRight = BorderStyle.THIN
-        }
-        
-        val dataStyle = workbook.createCellStyle().apply {
-            borderBottom = BorderStyle.THIN
-            borderTop = BorderStyle.THIN
-            borderLeft = BorderStyle.THIN
-            borderRight = BorderStyle.THIN
-        }
-        
-        val headers = arrayOf("Дата", "Начало", "Конец", "Одометр начало", "Одометр конец", 
-                             "Пробег GPS (км)", "Пробег ручной (км)", "Пробег итог (км)", 
-                             "Расход (л)", "Норма (л/100км)", "Комментарий")
-        
-        val headerRow = sheet.createRow(0)
-        headers.forEachIndexed { index, header ->
-            headerRow.createCell(index).apply {
-                setCellValue(header)
-                cellStyle = headerStyle
-            }
-        }
-        
-        trips.forEachIndexed { index, trip ->
-            val row = sheet.createRow(index + 1)
-            val totalDistance = if (trip.usedGpsDistance) trip.gpsDistanceKm else trip.manualDistanceKm
+    fun exportTrips(trips: List<TripEntity>): Boolean {
+        return try {
+            val fileName = "trips_export_${SimpleDateFormat("yyyyMMdd_HHmmss", Locale.US).format(Date())}.csv"
+            val dir = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOCUMENTS)
+            if (!dir.exists()) dir.mkdirs()
             
-            row.createCell(0).apply { setCellValue(trip.date); cellStyle = dataStyle }
-            row.createCell(1).apply { setCellValue(trip.startPoint); cellStyle = dataStyle }
-            row.createCell(2).apply { setCellValue(trip.endPoint); cellStyle = dataStyle }
-            row.createCell(3).apply { setCellValue(trip.odometerStart); cellStyle = dataStyle }
-            row.createCell(4).apply { setCellValue(trip.odometerEnd); cellStyle = dataStyle }
-            row.createCell(5).apply { setCellValue(trip.gpsDistanceKm); cellStyle = dataStyle }
-            row.createCell(6).apply { setCellValue(trip.manualDistanceKm); cellStyle = dataStyle }
-            row.createCell(7).apply { setCellValue(totalDistance); cellStyle = dataStyle }
-            row.createCell(8).apply { setCellValue(trip.fuelConsumed); cellStyle = dataStyle }
-            row.createCell(9).apply { setCellValue(trip.seasonNorm); cellStyle = dataStyle }
-            row.createCell(10).apply { setCellValue(trip.comment); cellStyle = dataStyle }
+            val file = File(dir, fileName)
+            FileOutputStream(file).use { fos ->
+                // BOM для Excel (чтобы открывал UTF-8)
+                fos.write(0xEF)
+                fos.write(0xBB)
+                fos.write(0xBF)
+                
+                // Заголовки
+                val headers = "Дата;Начало;Конец;Одометр начало;Одометр конец;" +
+                             "Пробег GPS (км);Пробег ручной (км);Пробег итог (км);" +
+                             "Расход (л);Норма (л/100км);Комментарий\n"
+                fos.write(headers.toByteArray())
+                
+                // Данные
+                trips.forEach { trip ->
+                    val totalDistance = if (trip.usedGpsDistance) trip.gpsDistanceKm else trip.manualDistanceKm
+                    val line = "${trip.date};${trip.startPoint};${trip.endPoint};" +
+                              "${trip.odometerStart};${trip.odometerEnd};" +
+                              "${String.format("%.2f", trip.gpsDistanceKm)};" +
+                              "${String.format("%.2f", trip.manualDistanceKm)};" +
+                              "${String.format("%.2f", totalDistance)};" +
+                              "${String.format("%.2f", trip.fuelConsumed)};" +
+                              "${String.format("%.2f", trip.seasonNorm)};" +
+                              "${trip.comment.replace(";", ",")}\n"
+                    fos.write(line.toByteArray())
+                }
+            }
+            
+            // Открываем файл
+            val uri = FileProvider.getUriForFile(context, "${context.packageName}.fileprovider", file)
+            val intent = Intent(Intent.ACTION_VIEW).apply {
+                setDataAndType(uri, "text/csv")
+                addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+            }
+            context.startActivity(intent)
+            true
+        } catch (e: Exception) {
+            e.printStackTrace()
+            Toast.makeText(context, "Ошибка экспорта: ${e.message}", Toast.LENGTH_LONG).show()
+            false
         }
-        
-        (0..10).forEach { sheet.autoSizeColumn(it) }
-        
-        val fileName = "trips_export_${System.currentTimeMillis()}.xlsx"
-        val file = File(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOCUMENTS), fileName)
-        FileOutputStream(file).use { workbook.write(it) }
-        workbook.close()
-        
-        return FileProvider.getUriForFile(context, "${context.packageName}.fileprovider", file)
     }
 }
