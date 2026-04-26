@@ -21,6 +21,19 @@ class TripViewModel(application: Application) : AndroidViewModel(application) {
     private val _statistics = MutableStateFlow<TripStatistics?>(null)
     val statistics: StateFlow<TripStatistics?> = _statistics.asStateFlow()
     
+    private val _lastTrip = MutableStateFlow<TripEntity?>(null)
+    val lastTrip: StateFlow<TripEntity?> = _lastTrip.asStateFlow()
+    
+    init {
+        loadLastTrip()
+    }
+    
+    fun loadLastTrip() {
+        viewModelScope.launch {
+            _lastTrip.value = repository.getLastTrip()
+        }
+    }
+    
     fun loadStatistics(year: Int, month: Int? = null) {
         viewModelScope.launch {
             val (startDate, endDate) = if (month != null) {
@@ -70,12 +83,14 @@ class TripViewModel(application: Application) : AndroidViewModel(application) {
                 comment = comment
             )
             repository.insert(trip)
+            loadLastTrip() // Обновляем последнюю поездку после сохранения
         }
     }
     
     fun deleteTrip(trip: TripEntity) {
         viewModelScope.launch {
             repository.delete(trip)
+            loadLastTrip() // Обновляем после удаления
         }
     }
     

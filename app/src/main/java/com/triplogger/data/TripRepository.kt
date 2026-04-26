@@ -8,6 +8,8 @@ class TripRepository(private val dao: TripDao) {
     fun getTripsBetweenDates(start: String, end: String): Flow<List<TripEntity>> = 
         dao.getTripsBetweenDates(start, end)
     
+    suspend fun getLastTrip(): TripEntity? = dao.getLastTrip()
+    
     suspend fun getStatistics(start: String, end: String): TripStatistics {
         val totalManualDistance = dao.getTotalManualDistanceBetween(start, end) ?: 0.0
         val totalGpsDistance = dao.getTotalGpsDistanceBetween(start, end) ?: 0.0

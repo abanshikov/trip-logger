@@ -11,6 +11,9 @@ interface TripDao {
     @Query("SELECT * FROM trips WHERE date BETWEEN :startDate AND :endDate ORDER BY date DESC")
     fun getTripsBetweenDates(startDate: String, endDate: String): Flow<List<TripEntity>>
     
+    @Query("SELECT * FROM trips ORDER BY id DESC LIMIT 1")
+    suspend fun getLastTrip(): TripEntity?
+    
     @Query("SELECT SUM(manualDistanceKm) FROM trips WHERE usedGpsDistance = 0 AND date BETWEEN :startDate AND :endDate")
     suspend fun getTotalManualDistanceBetween(startDate: String, endDate: String): Double?
     
