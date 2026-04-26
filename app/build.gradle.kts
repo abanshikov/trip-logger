@@ -63,10 +63,8 @@ dependencies {
     implementation("com.google.android.gms:play-services-location:21.0.1")
 
     // Apache POI for Excel
-    // implementation("org.apache.poi:poi:5.2.3")
-    // implementation("org.apache.poi:poi-ooxml:5.2.3")
-    sed -i 's/implementation("org.apache.poi:poi:5.2.3")/implementation("org.apache.poi:poi:5.2.5")/' app/build.gradle.kts
-    sed -i 's/implementation("org.apache.poi:poi-ooxml:5.2.3")/implementation("org.apache.poi:poi-ooxml:5.2.5")/' app/build.gradle.kts
+    implementation("org.apache.poi:poi:5.2.5")
+    implementation("org.apache.poi:poi-ooxml:5.2.5")
 
     // Coroutines
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-android:1.7.3")
