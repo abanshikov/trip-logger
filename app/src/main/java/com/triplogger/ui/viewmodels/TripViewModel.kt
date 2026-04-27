@@ -14,26 +14,26 @@ import java.util.*
 class TripViewModel(application: Application) : AndroidViewModel(application) {
     private val repository = (application as TripLoggerApplication).repository
     private val prefs = PreferencesManager(application)
-    
+
     val allTrips: StateFlow<List<TripEntity>> = repository.getAllTrips()
         .stateIn(viewModelScope, SharingStarted.Lazily, emptyList())
-    
+
     private val _statistics = MutableStateFlow<TripStatistics?>(null)
     val statistics: StateFlow<TripStatistics?> = _statistics.asStateFlow()
-    
+
     private val _lastTrip = MutableStateFlow<TripEntity?>(null)
     val lastTrip: StateFlow<TripEntity?> = _lastTrip.asStateFlow()
-    
+
     init {
         loadLastTrip()
     }
-    
+
     fun loadLastTrip() {
         viewModelScope.launch {
             _lastTrip.value = repository.getLastTrip()
         }
     }
-    
+
     fun loadStatistics(year: Int, month: Int? = null) {
         viewModelScope.launch {
             val (startDate, endDate) = if (month != null) {
@@ -52,13 +52,15 @@ class TripViewModel(application: Application) : AndroidViewModel(application) {
             _statistics.value = repository.getStatistics(startDate, endDate)
         }
     }
-    
+
     fun saveTrip(
         date: String,
+        departureTime: String,
+        arrivalTime: String,
         startPoint: String,
         endPoint: String,
-        odometerStart: Double,
-        odometerEnd: Double,
+        odometerStart: Int,
+        odometerEnd: Int,
         gpsDistance: Double,
         manualDistance: Double,
         usedGps: Boolean,
@@ -68,9 +70,11 @@ class TripViewModel(application: Application) : AndroidViewModel(application) {
             val seasonNorm = prefs.getCurrentSeasonNorm().toDouble()
             val finalDistance = if (usedGps) gpsDistance else manualDistance
             val fuelConsumed = (finalDistance * seasonNorm) / 100.0
-            
+
             val trip = TripEntity(
                 date = date,
+                departureTime = departureTime,
+                arrivalTime = arrivalTime,
                 startPoint = startPoint,
                 endPoint = endPoint,
                 odometerStart = odometerStart,
@@ -83,21 +87,21 @@ class TripViewModel(application: Application) : AndroidViewModel(application) {
                 comment = comment
             )
             repository.insert(trip)
-            loadLastTrip() // Обновляем последнюю поездку после сохранения
+            loadLastTrip()
         }
     }
-    
+
     fun deleteTrip(trip: TripEntity) {
         viewModelScope.launch {
             repository.delete(trip)
-            loadLastTrip() // Обновляем после удаления
+            loadLastTrip()
         }
     }
-    
+
     fun getTripsBetweenDates(start: String, end: String): Flow<List<TripEntity>> {
         return repository.getTripsBetweenDates(start, end)
     }
-    
+
     suspend fun getStatisticsForPeriod(start: String, end: String): TripStatistics {
         return repository.getStatistics(start, end)
     }

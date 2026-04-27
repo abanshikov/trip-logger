@@ -18,36 +18,33 @@ class ExcelExporter(private val context: Context) {
             val fileName = "trips_export_${SimpleDateFormat("yyyyMMdd_HHmmss", Locale.US).format(Date())}.csv"
             val dir = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOCUMENTS)
             if (!dir.exists()) dir.mkdirs()
-            
+
             val file = File(dir, fileName)
             FileOutputStream(file).use { fos ->
-                // BOM для Excel (чтобы открывал UTF-8)
                 fos.write(0xEF)
                 fos.write(0xBB)
                 fos.write(0xBF)
-                
-                // Заголовки
-                val headers = "Дата;Начало;Конец;Одометр начало;Одометр конец;" +
-                             "Пробег GPS (км);Пробег ручной (км);Пробег итог (км);" +
-                             "Расход (л);Норма (л/100км);Комментарий\n"
+
+                val headers = "Дата;Время выезда;Время возвращения;Начало;Конец;" +
+                             "Одометр начало;Одометр конец;Пробег GPS (км);Пробег ручной (км);" +
+                             "Пробег итог (км);Расход (л);Норма (л/100км);Комментарий\\n"
                 fos.write(headers.toByteArray())
-                
-                // Данные
+
                 trips.forEach { trip ->
                     val totalDistance = if (trip.usedGpsDistance) trip.gpsDistanceKm else trip.manualDistanceKm
-                    val line = "${trip.date};${trip.startPoint};${trip.endPoint};" +
+                    val line = "${trip.date};${trip.departureTime};${trip.arrivalTime};" +
+                              "${trip.startPoint};${trip.endPoint};" +
                               "${trip.odometerStart};${trip.odometerEnd};" +
                               "${String.format("%.2f", trip.gpsDistanceKm)};" +
-                              "${String.format("%.2f", trip.manualDistanceKm)};" +
-                              "${String.format("%.2f", totalDistance)};" +
+                              "${String.format("%.0f", trip.manualDistanceKm)};" +
+                              "${String.format("%.0f", totalDistance)};" +
                               "${String.format("%.2f", trip.fuelConsumed)};" +
                               "${String.format("%.2f", trip.seasonNorm)};" +
-                              "${trip.comment.replace(";", ",")}\n"
+                              "${trip.comment.replace(";", ",")}\\n"
                     fos.write(line.toByteArray())
                 }
             }
-            
-            // Открываем файл
+
             val uri = FileProvider.getUriForFile(context, "${context.packageName}.fileprovider", file)
             val intent = Intent(Intent.ACTION_VIEW).apply {
                 setDataAndType(uri, "text/csv")
