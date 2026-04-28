@@ -20,35 +20,36 @@ class ExcelExporter(private val context: Context) {
             if (!dir.exists()) dir.mkdirs()
 
             val file = File(dir, fileName)
-            FileOutputStream(file).use { fos ->
-                // BOM для Excel (UTF-8)
-                fos.write(0xEF.toByte())
-                fos.write(0xBB.toByte())
-                fos.write(0xBF.toByte())
+            val writer = file.bufferedWriter(charset = Charsets.UTF_8)
+
+            writer.use { out ->
+                // BOM для Excel
+                out.write('\uFEFF')
 
                 // Заголовки
-                val headers = "Дата;Время выезда;Время возвращения;Начало;Конец;" +
-                             "Одометр начало;Одометр конец;Пробег GPS (км);Пробег ручной (км);" +
-                             "Пробег итог (км);Расход (л);Норма (л/100км);Комментарий"
-                fos.write(headers.toByteArray())
-                fos.write('\n'.code)
+                out.write("Дата;Время выезда;Время возвращения;Начало;Конец;")
+                out.write("Одометр начало;Одометр конец;Пробег GPS (км);Пробег ручной (км);")
+                out.write("Пробег итог (км);Расход (л);Норма (л/100км);Комментарий")
+                out.newLine()
 
                 // Данные — сортировка от ранних к поздним
-                val sortedTrips = trips.sortedWith(compareBy<TripEntity> { it.date }.thenBy { it.departureTime })
+                val sortedTrips = trips.sortedWith(
+                    compareBy<TripEntity> { it.date }.thenBy { it.departureTime }
+                )
 
                 sortedTrips.forEach { trip ->
                     val totalDistance = if (trip.usedGpsDistance) trip.gpsDistanceKm else trip.manualDistanceKm
-                    val line = "${trip.date};${trip.departureTime};${trip.arrivalTime};" +
-                              "${trip.startPoint};${trip.endPoint};" +
-                              "${trip.odometerStart};${trip.odometerEnd};" +
-                              "${String.format("%.2f", trip.gpsDistanceKm)};" +
-                              "${String.format("%.0f", trip.manualDistanceKm)};" +
-                              "${String.format("%.0f", totalDistance)};" +
-                              "${String.format("%.2f", trip.fuelConsumed)};" +
-                              "${String.format("%.2f", trip.seasonNorm)};" +
-                              "${trip.comment.replace(";", ",")}"
-                    fos.write(line.toByteArray())
-                    fos.write('\n'.code)
+
+                    out.write("${trip.date};${trip.departureTime};${trip.arrivalTime};")
+                    out.write("${trip.startPoint};${trip.endPoint};")
+                    out.write("${trip.odometerStart};${trip.odometerEnd};")
+                    out.write("${String.format("%.2f", trip.gpsDistanceKm)};")
+                    out.write("${String.format("%.0f", trip.manualDistanceKm)};")
+                    out.write("${String.format("%.0f", totalDistance)};")
+                    out.write("${String.format("%.2f", trip.fuelConsumed)};")
+                    out.write("${String.format("%.2f", trip.seasonNorm)};")
+                    out.write(trip.comment.replace(";", ","))
+                    out.newLine()
                 }
             }
 
