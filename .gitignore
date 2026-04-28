@@ -1,0 +1,12 @@
+# Kotlin
+.gradle/
+.gradle/*
+build/
+!gradle/wrapper/gradle-wrapper.jar
+!**/src/main/**/build/
+!**/src/test/**/build/
+*.class
+*.log
+.idea/
+*.iml
+/local.properties

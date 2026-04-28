@@ -8,7 +8,6 @@ import android.widget.Toast
 import androidx.core.content.FileProvider
 import com.triplogger.data.TripEntity
 import java.io.File
-import java.io.FileOutputStream
 import java.text.SimpleDateFormat
 import java.util.*
 
@@ -23,8 +22,8 @@ class ExcelExporter(private val context: Context) {
             val writer = file.bufferedWriter(charset = Charsets.UTF_8)
 
             writer.use { out ->
-                // BOM для Excel
-                out.write('\uFEFF')
+                // BOM для Excel (U+FEFF как строка)
+                out.write("\uFEFF")
 
                 // Заголовки
                 out.write("Дата;Время выезда;Время возвращения;Начало;Конец;")
