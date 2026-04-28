@@ -21,16 +21,22 @@ class ExcelExporter(private val context: Context) {
 
             val file = File(dir, fileName)
             FileOutputStream(file).use { fos ->
-                fos.write(0xEF)
-                fos.write(0xBB)
-                fos.write(0xBF)
+                // BOM для Excel (UTF-8)
+                fos.write(0xEF.toByte())
+                fos.write(0xBB.toByte())
+                fos.write(0xBF.toByte())
 
+                // Заголовки
                 val headers = "Дата;Время выезда;Время возвращения;Начало;Конец;" +
                              "Одометр начало;Одометр конец;Пробег GPS (км);Пробег ручной (км);" +
-                             "Пробег итог (км);Расход (л);Норма (л/100км);Комментарий\\n"
+                             "Пробег итог (км);Расход (л);Норма (л/100км);Комментарий"
                 fos.write(headers.toByteArray())
+                fos.write('\n'.code)
 
-                trips.forEach { trip ->
+                // Данные — сортировка от ранних к поздним
+                val sortedTrips = trips.sortedWith(compareBy<TripEntity> { it.date }.thenBy { it.departureTime })
+
+                sortedTrips.forEach { trip ->
                     val totalDistance = if (trip.usedGpsDistance) trip.gpsDistanceKm else trip.manualDistanceKm
                     val line = "${trip.date};${trip.departureTime};${trip.arrivalTime};" +
                               "${trip.startPoint};${trip.endPoint};" +
@@ -40,8 +46,9 @@ class ExcelExporter(private val context: Context) {
                               "${String.format("%.0f", totalDistance)};" +
                               "${String.format("%.2f", trip.fuelConsumed)};" +
                               "${String.format("%.2f", trip.seasonNorm)};" +
-                              "${trip.comment.replace(";", ",")}\\n"
+                              "${trip.comment.replace(";", ",")}"
                     fos.write(line.toByteArray())
+                    fos.write('\n'.code)
                 }
             }
 
